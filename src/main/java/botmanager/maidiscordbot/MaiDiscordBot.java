@@ -27,7 +27,7 @@ public class MaiDiscordBot extends BotBase {
 
     TimerTask timerTask;
     Timer timer = new Timer();
-
+	
     private HashMap<Guild, Boolean> harvesting = new HashMap<>();
     private static final int PLANT_GROWTH_MAX = 500000;
     public Set<Member> planters = new HashSet<>();
@@ -35,9 +35,9 @@ public class MaiDiscordBot extends BotBase {
     public MaiDiscordBot(String botToken, String name) {
         super(botToken, name);
         getJDA().getPresence().setActivity(Activity.watching(" you lose money :)"));
-
         setPrefix("~");
-        setCommands(new ICommand[]{
+        generatePlantTimer();
+        setCommands(new ICommand[] {
             new MoneyCommand(this),
             new HelpCommand(this),
             new BalanceCommand(this),
@@ -79,6 +79,24 @@ public class MaiDiscordBot extends BotBase {
         };
 
         timer.schedule(timerTask, 60000, 60000);
+    }
+
+    public void generatePlantTimer() {
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        timerTask = new TimerTask() {
+
+            @Override
+            public void run() {
+                growPlants();
+            }
+        };
+
+        timer.schedule(timerTask, 60000, 60000);
+        exec.schedule(new Runnable() {
+            public void run() {
+                generatePlanterCache();
+            }
+        }, 1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -238,7 +256,7 @@ public class MaiDiscordBot extends BotBase {
         User user = jda.getUserById(userId);
         return guild.getMember(user);
     }
-
+	
     public int getUserPlant(Guild guild, User user) {
         try {
             return Integer.parseInt(getUserCSVAtIndex(guild, user, 4));
