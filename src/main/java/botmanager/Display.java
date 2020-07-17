@@ -1,6 +1,8 @@
 package botmanager;
 
 import static botmanager.Utilities.readLines;
+
+import botmanager.frostbalance.Frostbalance;
 import botmanager.generic.BotBase;
 import botmanager.boteyy_.Boteyy_;
 import botmanager.maidiscordbot.MaiDiscordBot;
@@ -21,9 +23,7 @@ public class Display extends javax.swing.JFrame {
         List<String> tokens = readLines(new File("data/botmanager_tokens.txt"));
         
         bots = new BotBase[] {
-            new MaiDiscordBot(tokens.get(0), "MaiDiscordBot"),
-            new Boteyy_(tokens.get(1), "Boteyy_"),
-            new SpeedrunBot(tokens.get(2), "Speedrun Bot")
+            new Frostbalance(tokens.get(0), "Frostbalance")
         };
     }
 

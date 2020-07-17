@@ -2,13 +2,11 @@ package botmanager;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+
+import java.io.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -54,7 +52,10 @@ public class Utilities {
     public static List<String> readLines(File file) {
         try {
             return Files.readLines(file, Charsets.UTF_8);
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            System.err.println("File " + file + " not found, using empty list.");
+            return new ArrayList<>();
+        } catch (Exception e) { //ew
             e.printStackTrace();
             return null;
         }
@@ -277,5 +278,56 @@ public class Utilities {
         
         return result;
     }
-    
+
+    //HYREON'S UTILITIES---
+
+    public static String combineArrayStopAtIndex(String[] array, int index) {
+        String result = "";
+
+        for (int i = 0; i < index; i++) {
+            result += array[i];
+
+            if (i + 1 != index) {
+                result += " ";
+            }
+        }
+
+        return result;
+    }
+
+    public static void removeFile(File file) {
+        file.delete();
+    }
+
+    public static void append(File file, String info) {
+        List<String> lines = readLines(file);
+        String previousData;
+        if (lines.isEmpty()) {
+            previousData = "";
+        } else {
+            previousData = String.join("\n", lines) + "\n";
+        }
+        write(file, previousData + info);
+    }
+
+    public static void removeLine(File file) {
+        List<String> lines = readLines(file);
+        write(file, String.join("\n", lines.subList(0, lines.size() - 1)));
+    }
+
+    public static long todayAsLong() {
+        return LocalDate.now().toEpochDay();
+    }
+
+    public static User findBannedUser(Guild guild, String name) {
+
+        for (Guild.Ban ban : guild.retrieveBanList().complete()) {
+            if (ban.getUser().getName().equals(name)) {
+                return ban.getUser();
+            }
+        }
+
+        return null;
+
+    }
 }

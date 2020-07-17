@@ -3,7 +3,6 @@ package botmanager.frostbalance.commands;
 import botmanager.Utilities;
 import botmanager.frostbalance.generic.FrostbalanceCommandBase;
 import botmanager.generic.BotBase;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.text.SimpleDateFormat;
@@ -16,35 +15,20 @@ import java.util.Date;
 
 public class DailyRewardCommand extends FrostbalanceCommandBase {
 
-    SimpleDateFormat sdf = new SimpleDateFormat("MMddyyyy");
     SimpleDateFormat hours = new SimpleDateFormat("HH");
     
     public DailyRewardCommand(BotBase bot) {
-        super(bot);
+        super(bot, new String[] {
+                bot.getPrefix() + "daily"
+        });
     }
 
     @Override
-    public void run(Event genericEvent) {
-        GuildMessageReceivedEvent event;
-        String message;
-        int date;
-        
-        if (!(genericEvent instanceof GuildMessageReceivedEvent)) {
-            return;
-        }
-        
-        event = (GuildMessageReceivedEvent) genericEvent;
-        message = event.getMessage().getContentRaw();
-        
-        if (!message.equalsIgnoreCase(bot.getPrefix() + "daily")) {
-            return;
-        }
-        
-        date = Integer.parseInt(sdf.format(new Date()));
-        
-        if (bot.getUserDaily(event.getMember()) != date) {
-            bot.setUserDaily(event.getMember(), date);
-            bot.changeUserInfluence(event.getMember(), 1);
+    public void runPublic(GuildMessageReceivedEvent event, String message) {
+
+        double gain = bot.gainDailyInfluence(event.getMember(), 1);
+
+        if (gain > 0) {
             Utilities.sendGuildMessage(event.getChannel(), event.getMember().getEffectiveName() + ", your influence increases.");
         } else {
             int hrsDelay = (24 - Integer.parseInt(hours.format(new Date())));
@@ -54,8 +38,13 @@ public class DailyRewardCommand extends FrostbalanceCommandBase {
     }
 
     @Override
-    public String info() {
-        return "**" + bot.getPrefix() + "daily** - gives you influence once a day";
+    public String publicInfo() {
+        return "**" + bot.getPrefix() + "daily** - gives you all the influence you can get today, instantly";
+    }
+
+    @Override
+    public String privateInfo() {
+        return null;
     }
 
 }

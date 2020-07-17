@@ -2,11 +2,10 @@ package botmanager.frostbalance.commands;
 
 import botmanager.Utilities;
 import botmanager.frostbalance.generic.FrostbalanceCommandBase;
+import botmanager.frostbalance.generic.GenericMessageReceivedEventWrapper;
 import botmanager.generic.BotBase;
-import botmanager.maidiscordbot.commands.MoneyCommand;
-import botmanager.maidiscordbot.generic.MaiDiscordBotCommandBase;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 
 /**
  *
@@ -15,40 +14,56 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 public class HelpCommand extends FrostbalanceCommandBase {
 
     public HelpCommand(BotBase bot) {
-        super(bot);
+        super(bot, new String[] {
+                bot.getPrefix() + "help"
+        });
     }
     
     @Override
-    public void run(Event genericEvent) {
-        GuildMessageReceivedEvent event;
-        String[] words;
+    public void runPublic(GuildMessageReceivedEvent event, String message) {
         String result = "__**Frostbalance**__\n\n";
-        
-        if (!(genericEvent instanceof GuildMessageReceivedEvent)) {
-            return;
-        }
-        
-        event = (GuildMessageReceivedEvent) genericEvent;
-        words = event.getMessage().getContentRaw().split(" ");
-        
-        if (words.length > 0 && words[0].equals(bot.getPrefix() + "help")) {
-            for (FrostbalanceCommandBase command : bot.getCommands()) {
-                String info = command.info();
 
+        for (FrostbalanceCommandBase command : bot.getCommands()) {
+            String info = command.publicInfo();
+
+            if (!command.isAdminOnly() || command.wouldAuthorize(event.getGuild(), event.getAuthor())) { //hide admin commands
                 if (info != null) {
                     result += info + "\n";
                 }
             }
-        } else {
-            return;
+
         }
         
         Utilities.sendGuildMessage(event.getChannel(), result);
     }
 
     @Override
-    public String info() {
-        return "**" + bot.getPrefix() + "help** - gives you this shpeal";
+    public void runPrivate(PrivateMessageReceivedEvent event, String message) {
+        String result = "__**Frostbalance**__\n\n";
+
+        for (FrostbalanceCommandBase command : bot.getCommands()) {
+            String info = command.privateInfo();
+
+            if (!command.isAdminOnly() || command.wouldAuthorize(new GenericMessageReceivedEventWrapper(bot, event).getGuild(), event.getAuthor())) { //hide admin commands
+                if (info != null) {
+                    result += info + "\n";
+                }
+            }
+        }
+
+        Utilities.sendPrivateMessage(event.getAuthor(), result);
     }
-    
+
+    @Override
+    public String publicInfo() {
+        return "**" + bot.getPrefix() + "help** in public chat - rattles off a bunch of useless public commands\n" +
+                "**" + bot.getPrefix() + "help** in DM - rattles off a bunch of useless private commands";
+    }
+
+    @Override
+    public String privateInfo() {
+        return "**" + bot.getPrefix() + "help** in DM - rattles off a bunch of useless private commands\n" +
+                "**" + bot.getPrefix() + "help** in public chat - rattles off a bunch of useless public commands";
+    }
+
 }
