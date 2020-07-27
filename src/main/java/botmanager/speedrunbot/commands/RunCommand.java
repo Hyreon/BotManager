@@ -1,7 +1,8 @@
 package botmanager.speedrunbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
+import botmanager.Utils;
 import botmanager.speedrunbot.SpeedrunBot;
 import com.tsunderebug.speedrun4j.game.Category;
 import com.tsunderebug.speedrun4j.game.Game;
@@ -55,7 +56,7 @@ public class RunCommand extends SpeedrunBotCommandBase {
                 found = true;
                 break;
             } else if (input.toLowerCase().replaceAll(" ", "").equals(keyword)) {
-                Utilities.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
+                JDAUtils.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
             }
         }
 
@@ -63,7 +64,7 @@ public class RunCommand extends SpeedrunBotCommandBase {
             return;
         }
 
-        sentMessage = Utilities.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
+        sentMessage = JDAUtils.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
         gameID = bot.determineGameID(input.split(bot.getSeparator())[0]);
         game = SpeedrunBot.getGame(gameID);
 
@@ -93,6 +94,7 @@ public class RunCommand extends SpeedrunBotCommandBase {
         eb.addField("Example", "```" + bot.getPrefix() + "p mario 1"
                 + bot.getSeparator() + "any%"
                 + bot.getSeparator() + "darbian```", false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
 
@@ -105,7 +107,7 @@ public class RunCommand extends SpeedrunBotCommandBase {
             Leaderboard lb = Leaderboard.forCategory(category);
             ArrayList<String> names = bot.getLeaderboardNames(lb, category.getWeblink());
             Run run;
-            String name = SpeedrunBot.bestSimilarity(names, input.split(bot.getSeparator())[2]);
+            String name = Utils.bestSimilarity(names, input.split(bot.getSeparator())[2]);
             String videoLink;
             String comment;
             int place = names.indexOf(name);
@@ -134,6 +136,7 @@ public class RunCommand extends SpeedrunBotCommandBase {
                 eb.addField("Video Link", videoLink, false);
             }
 
+            eb.setColor(SpeedrunBot.getEmbedColor());
             return eb.build();
         } catch (IOException e) {
             e.printStackTrace();

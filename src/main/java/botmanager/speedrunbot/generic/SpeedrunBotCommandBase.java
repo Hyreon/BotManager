@@ -30,13 +30,16 @@ public abstract class SpeedrunBotCommandBase implements ICommand {
     public MessageEmbed getWaitingEmbed() {
         EmbedBuilder eb = new EmbedBuilder();
         eb.addField("Loading", "Speedrun.com's API takes awhile to load, information will be updated as it comes in.", true);
+        eb.setColor(SpeedrunBot.getEmbedColor());
         return eb.build();
     }
 
     public MessageEmbed getConnectionFailureEmbed() {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setThumbnail(bot.getErrorUrl());
-        eb.addField("", "", false);
+        eb.addField("Search Failed", "Either there was a problem connecting to Speedrun.com's API, or the game/category you were searching for"
+                + "isn't properly supported.", false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
     
@@ -44,6 +47,7 @@ public abstract class SpeedrunBotCommandBase implements ICommand {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setThumbnail(bot.getErrorUrl());
         eb.addField("Search Failed", text, false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
     
@@ -61,7 +65,8 @@ public abstract class SpeedrunBotCommandBase implements ICommand {
 
         eb.addField("Search Failed", "The game '" + input.split(bot.getSeparator())[0] + "' could not be found. Here are some suggestions of games you may have wanted to search for. "
                 + "If your game doesn't appear, message the bot directly for the game you want added.", false);
-        eb.addField("Similar Title Names", closeGamesStr, false);
+        eb.addField("Similarly Titled Names", closeGamesStr, false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
     
@@ -88,6 +93,7 @@ public abstract class SpeedrunBotCommandBase implements ICommand {
             }
 
             eb.addField("Category List", categoryList, false);
+            eb.setColor(SpeedrunBot.getEmbedFailureColor());
             return eb.build();
         } catch (IOException er) {
             er.printStackTrace();

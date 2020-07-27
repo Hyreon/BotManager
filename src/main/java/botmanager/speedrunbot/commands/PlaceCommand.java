@@ -1,7 +1,7 @@
 package botmanager.speedrunbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
 import botmanager.speedrunbot.SpeedrunBot;
 import com.tsunderebug.speedrun4j.game.Category;
 import com.tsunderebug.speedrun4j.game.Game;
@@ -54,7 +54,7 @@ public class PlaceCommand extends SpeedrunBotCommandBase {
                 found = true;
                 break;
             } else if (input.toLowerCase().replaceAll(" ", "").equals(keyword)) {
-                Utilities.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
+                JDAUtils.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
             }
         }
 
@@ -62,7 +62,7 @@ public class PlaceCommand extends SpeedrunBotCommandBase {
             return;
         }
 
-        sentMessage = Utilities.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
+        sentMessage = JDAUtils.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
         gameID = bot.determineGameID(input.split(bot.getSeparator())[0]);
 
         game = SpeedrunBot.getGame(gameID);
@@ -93,6 +93,7 @@ public class PlaceCommand extends SpeedrunBotCommandBase {
         eb.addField("Example", "```" + bot.getPrefix() + "p mario 3"
                 + bot.getSeparator() + "warpless"
                 + bot.getSeparator() + "3```", false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
 
@@ -131,6 +132,7 @@ public class PlaceCommand extends SpeedrunBotCommandBase {
                 eb.addField("Video Link", videoLink, false);
             }
             
+            eb.setColor(SpeedrunBot.getEmbedColor());
             return eb.build();
         } catch (IOException e) {
             e.printStackTrace();

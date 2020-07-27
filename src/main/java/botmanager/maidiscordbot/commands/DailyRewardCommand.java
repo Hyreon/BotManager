@@ -1,13 +1,12 @@
 package botmanager.maidiscordbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import botmanager.maidiscordbot.generic.MaiDiscordBotCommandBase;
-import botmanager.maidiscordbot.MaiDiscordBot;
 
 /**
  *
@@ -46,10 +45,10 @@ public class DailyRewardCommand extends MaiDiscordBotCommandBase {
             int reward = (int) (Math.random() * 150) + 100;
             bot.addUserBalance(event.getMember(), reward);
             bot.setUserDaily(event.getMember(), date);
-            Utilities.sendGuildMessage(event.getChannel(), event.getMember().getEffectiveName() + ", here is $" + reward + "!");
+            JDAUtils.sendGuildMessage(event.getChannel(), event.getMember().getEffectiveName() + ", here is $" + reward + "!");
         } else {
             int hrsDelay = (24 - Integer.parseInt(hours.format(new Date())));
-            Utilities.sendGuildMessage(event.getChannel(), event.getMember().getEffectiveName() + ", try again at midnight EST "
+            JDAUtils.sendGuildMessage(event.getChannel(), event.getMember().getEffectiveName() + ", try again at midnight EST "
                     + "(around " + hrsDelay + " hour" + (hrsDelay > 1 ? "s" : "") + ").");
         }
     }

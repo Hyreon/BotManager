@@ -1,14 +1,13 @@
 package botmanager.speedrunbot;
 
-import botmanager.speedrunbot.commands.PMRepeaterCommand;
 import botmanager.speedrunbot.commands.PlaceCommand;
 import botmanager.speedrunbot.commands.LeaderboardCommand;
 import botmanager.speedrunbot.commands.RunCommand;
 import botmanager.speedrunbot.commands.WorldRecordCommand;
 import botmanager.speedrunbot.commands.HelpCommand;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
-import botmanager.speedrunbot.generic.SpeedrunBotCommandBase;
+import botmanager.IOUtils;
+import botmanager.Utils;
 import com.tsunderebug.speedrun4j.game.Category;
 import com.tsunderebug.speedrun4j.game.Game;
 import com.tsunderebug.speedrun4j.game.Leaderboard;
@@ -21,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.internal.utils.tuple.Pair;
@@ -30,7 +27,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import botmanager.generic.ICommand;
+import botmanager.generic.commands.PMForwarderCommand;
+import botmanager.generic.commands.PMRepeaterCommand;
 import botmanager.speedrunbot.webdriver.WebDriverManager;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 
@@ -41,11 +41,12 @@ import java.util.LinkedHashMap;
  */
 public final class SpeedrunBot extends BotBase {
 
-    private final WebDriverManager webDrivers = new WebDriverManager();
+    private final WebDriverManager webDrivers = new WebDriverManager(10);
     private LinkedHashMap<String, String> gameSynonyms;
     private ArrayList<String> uniqueGameIds;
     private final String separator = "/";
     private final String errorUrl = "https://i.imgur.com/OUBCmGA.png";
+    private String prefix;
     
     //look into making help button with embeds
     //add info command
@@ -54,25 +55,25 @@ public final class SpeedrunBot extends BotBase {
     //idea: keep top 10-100 most frequented games always queued up? refresh every day perhaps
     public SpeedrunBot(String botToken, String name) {
         super(botToken, name);
-        setPrefix("$");
-        getJDA().getPresence().setActivity(Activity.playing(getPrefix() + "help for info"));
+        prefix = "$";
+        getJDA().getPresence().setActivity(Activity.playing(prefix + "help for info"));
         
-        setCommands(new SpeedrunBotCommandBase[] {
+        setCommands(new ICommand[] {
             new LeaderboardCommand(this),
             new WorldRecordCommand(this),
             new PlaceCommand(this),
             new RunCommand(this),
             new HelpCommand(this),
-            new PMRepeaterCommand(this)
+            new PMRepeaterCommand(this),
+            new PMForwarderCommand(this)
         });
         
-        buildHashMap(Utilities.readLines(new File("data/" + name + "/game_name_shortcuts.csv")));
+        buildHashMap(IOUtils.readLines(new File("data/" + name + "/game_name_shortcuts.csv")));
         
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 shutdown();
-                System.out.println("get dunked on");
             }
         });
     }
@@ -145,9 +146,8 @@ public final class SpeedrunBot extends BotBase {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Problem: " + problem);
             e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException("Problem: " + problem);
         }
         
         gameSynonyms = map;
@@ -179,35 +179,8 @@ public final class SpeedrunBot extends BotBase {
         return result;
     }
     
-    public String getUserCSVAtIndex(Guild guild, User user, int index) {
-        File file = new File("data/" + getName() + "/" + guild.getId() + "/" + user.getId() + ".csv");
-
-        if (!file.exists()) {
-            return "";
-        }
-
-        return Utilities.getCSVValueAtIndex(Utilities.read(file), index);
-    }
-
-    public void setUserCSVAtIndex(Guild guild, User user, int index, String newValue) {
-        File file = new File("data/" + getName() + "/" + guild.getId() + "/" + user.getId() + ".csv");
-        String data = Utilities.read(file);
-        String[] originalValues = data.split(",");
-        String[] newValues;
-
-        if (originalValues.length > index) {
-            newValues = data.split(",");
-        } else {
-            newValues = new String[index + 1];
-            System.arraycopy(originalValues, 0, newValues, 0, originalValues.length);
-
-            for (int i = originalValues.length; i < newValues.length; i++) {
-                newValues[i] = "";
-            }
-        }
-
-        newValues[index] = newValue;
-        Utilities.write(file, Utilities.buildCSV(newValues));
+    public String getPrefix() {
+        return prefix;
     }
 
     public String determineGameID(String game) {
@@ -227,7 +200,7 @@ public final class SpeedrunBot extends BotBase {
         }
 
         for (HashMap.Entry<String, String> set : gameSynonyms.entrySet()) {
-            double similarity = similarity(game, set.getKey());
+            double similarity = Utils.similarity(game, set.getKey());
 
             if (similarity > bestSimilarity) {
                 result = set.getValue().split(separator)[1];
@@ -251,7 +224,7 @@ public final class SpeedrunBot extends BotBase {
         }
 
         for (HashMap.Entry<String, String> set : gameSynonyms.entrySet()) {
-            double similarity = similarity(game, set.getKey());
+            double similarity = Utils.similarity(game, set.getKey());
 
             if (similarity > bestSimilarity) {
                 bestSimilarity = similarity;
@@ -280,7 +253,7 @@ public final class SpeedrunBot extends BotBase {
         game = simplify(game);
 
         for (HashMap.Entry<String, String> set : gameSynonyms.entrySet()) {
-            double similarity = similarity(game, set.getKey());
+            double similarity = Utils.similarity(game, set.getKey());
 
             for (int i = bestSimilarity.size() - 2; i >= 0; i--) {
                 if (similarity > bestSimilarity.get(i)) {
@@ -332,14 +305,6 @@ public final class SpeedrunBot extends BotBase {
                 System.out.println("stop here");
             }
         }
-        
-        return result;
-    }
-    
-    public static ArrayList<String> test(Leaderboard lb) {
-        ArrayList<String> result = new ArrayList<>();
-        PlacedRun[] runs = lb.getRuns();
-        
         
         return result;
     }
@@ -480,7 +445,7 @@ public final class SpeedrunBot extends BotBase {
             Category[] categories = game.getCategories().getCategories();
             
             for (Category category : categories) {
-                double similarity = similarity(simplify(name), simplify(category.getName()));
+                double similarity = Utils.similarity(simplify(name), simplify(category.getName()));
 
                 if (similarity > bestSimilarity) {
                     result = category;
@@ -533,70 +498,6 @@ public final class SpeedrunBot extends BotBase {
         return result;
     }
 
-    public static String bestSimilarity(List<String> collection, String phrase) {
-        String result = null;
-        double bestSimilarity = -1;
-        
-        for (String s1 : collection) {
-            double similarity = similarity(simplify(s1), phrase);
-            
-            if (similarity > bestSimilarity) {
-                result = s1;
-                bestSimilarity = similarity;
-            }
-        }
-        
-        return result;
-    }
-    
-    public static double similarity(String s1, String s2) {
-        String longer = s1, shorter = s2;
-        if (s1.length() < s2.length()) { // longer should always have greater length
-            longer = s2;
-            shorter = s1;
-        }
-        int longerLength = longer.length();
-        if (longerLength == 0) {
-            return 1.0;
-            /* both strings are zero length */ }
-
-        double result = (longerLength - editDistance(longer, shorter)) / (double) longerLength;
-        if (s1.contains(s2) || s2.contains(s1)) {
-            result += (1 - result) / 2;
-        }
-
-        return result;
-    }
-
-    public static int editDistance(String s1, String s2) {
-        s1 = s1.toLowerCase();
-        s2 = s2.toLowerCase();
-
-        int[] costs = new int[s2.length() + 1];
-        for (int i = 0; i <= s1.length(); i++) {
-            int lastValue = i;
-            for (int j = 0; j <= s2.length(); j++) {
-                if (i == 0) {
-                    costs[j] = j;
-                } else {
-                    if (j > 0) {
-                        int newValue = costs[j - 1];
-                        if (s1.charAt(i - 1) != s2.charAt(j - 1)) {
-                            newValue = Math.min(Math.min(newValue, lastValue),
-                                    costs[j]) + 1;
-                        }
-                        costs[j - 1] = lastValue;
-                        lastValue = newValue;
-                    }
-                }
-            }
-            if (i > 0) {
-                costs[s2.length()] = lastValue;
-            }
-        }
-        return costs[s2.length()];
-    }
-
     public static String getNumericalSuffix(int index) {
         String result;
         int number = index + 1;
@@ -642,10 +543,13 @@ public final class SpeedrunBot extends BotBase {
     public String getErrorUrl() {
         return errorUrl;
     }
-
-    @Override
-    public SpeedrunBotCommandBase[] getCommands() {
-        return (SpeedrunBotCommandBase[]) super.getCommands();
+    
+    public static Color getEmbedColor() {
+        return new Color(217, 159, 36);
+    }
+    
+    public static Color getEmbedFailureColor() {
+        return new Color(255, 85, 41);
     }
     
 }

@@ -1,11 +1,12 @@
 package botmanager.speedrunbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.speedrunbot.generic.SpeedrunBotCommandBase;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
+import botmanager.generic.ICommand;
+import botmanager.speedrunbot.SpeedrunBot;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import botmanager.generic.ICommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed.Field;
 
@@ -24,7 +25,7 @@ public class HelpCommand extends SpeedrunBotCommandBase {
         GuildMessageReceivedEvent event;
         EmbedBuilder eb = new EmbedBuilder();
         String[] words;
-        //String result = "__**" + bot.getName() + "**__\n\n";
+        
         eb.setTitle(bot.getName() + " Commands");
         
         if (!(genericEvent instanceof GuildMessageReceivedEvent)) {
@@ -35,21 +36,24 @@ public class HelpCommand extends SpeedrunBotCommandBase {
         words = event.getMessage().getContentRaw().split(" ");
         
         if (words.length > 0 && words[0].equals(bot.getPrefix() + "help")) {
-            for (SpeedrunBotCommandBase command : bot.getCommands()) {
-                Field field = command.info();
-                
-                if (field != null) {
-                    eb.addField(field);
+            for (ICommand icommand : bot.getCommands()) {
+                if (icommand instanceof SpeedrunBotCommandBase) {
+                    SpeedrunBotCommandBase command = (SpeedrunBotCommandBase) icommand;
+                    Field field = command.info();
+                    
+                    if (field != null) {
+                        eb.addField(field);
+                    }
                 }
             }
             
-            //result += "\nIf you have any questions/comments/concerns, please DM me and I will get back to you :ok_hand:.";
             eb.addField("", "If you have any questions/comments/concerns,\nplease DM me and I will get back to you :ok_hand:.", false);
         } else {
             return;
         }
         
-        Utilities.sendGuildMessage(event.getChannel(), eb.build());
+        eb.setColor(SpeedrunBot.getEmbedColor());
+        JDAUtils.sendGuildMessage(event.getChannel(), eb.build());
     }
 
     @Override

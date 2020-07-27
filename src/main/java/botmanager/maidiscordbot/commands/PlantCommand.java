@@ -1,6 +1,8 @@
 package botmanager.maidiscordbot.commands;
 
-import botmanager.Utilities;
+import botmanager.JDAUtils;
+import botmanager.IOUtils;
+import botmanager.Utils;
 import botmanager.generic.BotBase;
 import botmanager.maidiscordbot.generic.MaiDiscordBotCommandBase;
 import net.dv8tion.jda.api.entities.Guild;
@@ -9,8 +11,6 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import java.io.File;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class PlantCommand extends MaiDiscordBotCommandBase {
 
@@ -59,15 +59,15 @@ public class PlantCommand extends MaiDiscordBotCommandBase {
         if (bot.isHarvesting(event.getGuild())) {
             result = "Someone else is harvesting right now.\n";
 
-            Utilities.sendGuildMessage(event.getChannel(), result);
+            JDAUtils.sendGuildMessage(event.getChannel(), result);
             return;
         }
 
         userExistingPlantAmount = bot.getUserPlant(event.getMember());
 
         try {
-            String info = Utilities.read(new File("data/" + bot.getName() + "/" + event.getGuild().getId() + "/plant.csv"));
-            totalPlantAmount = Integer.parseInt(Utilities.getCSVValueAtIndex(info, 0));
+            String info = IOUtils.read(new File("data/" + bot.getName() + "/guilds/" + event.getGuild().getId() + "/plant.csv"));
+            totalPlantAmount = Integer.parseInt(Utils.getCSVValueAtIndex(info, 0));
         } catch (NumberFormatException e) {
             totalPlantAmount = 0;
             bot.updatePlant(event.getGuild(), totalPlantAmount);
@@ -82,30 +82,30 @@ public class PlantCommand extends MaiDiscordBotCommandBase {
                 result += "\n" + getNameOutput(event.getGuild());
             }
 
-            Utilities.sendGuildMessage(event.getChannel(), result);
+            JDAUtils.sendGuildMessage(event.getChannel(), result);
             return;
         }
 
         try {
             userNewPlantAmount = Integer.parseInt(message);
         } catch (NumberFormatException e) {
-            Utilities.sendGuildMessage(event.getChannel(), "'" + message + "' is not a valid number.");
+            JDAUtils.sendGuildMessage(event.getChannel(), "'" + message + "' is not a valid number.");
             return;
         }
 
         balance = bot.getUserBalance(event.getMember());
         
         if (balance < userNewPlantAmount) {
-            Utilities.sendGuildMessage(event.getChannel(), "You only have $" + balance + ", ntnt.");
+            JDAUtils.sendGuildMessage(event.getChannel(), "You only have $" + balance + ", ntnt.");
             return;
         } else if (userNewPlantAmount <= 0) {
-            Utilities.sendGuildMessage(event.getChannel(), userNewPlantAmount + " is too small of a number.");
+            JDAUtils.sendGuildMessage(event.getChannel(), userNewPlantAmount + " is too small of a number.");
             return;
         }
 
         if (userNewPlantAmount >= PLANT_MAX) {
             result += "You can't plant any more than that!";
-            Utilities.sendGuildMessage(event.getChannel(), result);
+            JDAUtils.sendGuildMessage(event.getChannel(), result);
             return;
         } else if (userNewPlantAmount + userExistingPlantAmount > PLANT_MAX) {
             result += "That would make your plant too big!"
@@ -118,13 +118,13 @@ public class PlantCommand extends MaiDiscordBotCommandBase {
         bot.addUserBalance(event.getMember(), -userNewPlantAmount);
         bot.setUserPlant(event.getMember(), userNewPlantAmount + userExistingPlantAmount);
 
-        Utilities.sendGuildMessage(event.getChannel(), result);
+        JDAUtils.sendGuildMessage(event.getChannel(), result);
         bot.updatePlant(event.getGuild(), totalPlantAmount);
-        bot.planters.add(event.getMember());
+        bot.addPlanter(event.getMember());
     }
 
     public String getNameOutput(Guild guild) {
-        File[] files = new File("data/" + bot.getName() + "/" + guild.getId() + "/").listFiles();
+        File[] files = new File("data/" + bot.getName() + "/guilds/" + guild.getId() + "/members/").listFiles();
         String result = "";
 
         for (File file : files) {

@@ -1,6 +1,6 @@
 package botmanager.speedrunbot.commands;
 
-import botmanager.Utilities;
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
 import botmanager.speedrunbot.SpeedrunBot;
 import botmanager.speedrunbot.generic.SpeedrunBotCommandBase;
@@ -55,15 +55,15 @@ public class InfoCommand extends SpeedrunBotCommandBase {
                 found = true;
                 break;
             } else if (input.toLowerCase().replaceAll(" ", "").equals(keyword)) {
-                Utilities.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
+                JDAUtils.sendGuildMessage(event.getChannel(), getSyntaxFailureEmbed());
             }
         }
 
         if (!found) {
             return;
         }
-
-        sentMessage = Utilities.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
+        
+        sentMessage = JDAUtils.sendGuildMessageReturn(event.getChannel(), getWaitingEmbed());
         gameID = bot.determineGameID(input.split(bot.getSeparator())[0]);
 
         game = SpeedrunBot.getGame(gameID);
@@ -95,6 +95,7 @@ public class InfoCommand extends SpeedrunBotCommandBase {
         eb.addField("Examples", "```" + bot.getPrefix() + "lb botw\n"
                 + bot.getPrefix() + "lb celeste"
                 + bot.getSeparator() + "any%```", false);
+        eb.setColor(SpeedrunBot.getEmbedFailureColor());
         return eb.build();
     }
     
@@ -133,6 +134,7 @@ public class InfoCommand extends SpeedrunBotCommandBase {
         }
 
         eb.addField("Category List", categoryList, false);
+        eb.setColor(SpeedrunBot.getEmbedColor());
         return eb.build();
     }
     

@@ -6,7 +6,7 @@ sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 if (!hasProperty('mainClass')) {
-    ext.mainClass = 'botmanager.Display'
+    ext.mainClass = 'botmanager.BotManagerDisplay'
 }
 
 repositories {
@@ -15,14 +15,15 @@ repositories {
 }
 
 dependencies {
-    compile "net.dv8tion:JDA:4.1.1_104"
-    compile "org.seleniumhq.selenium:selenium-java:3.141.59"
-    compile "org.jsoup:jsoup:1.12.2"
+    compile 'net.dv8tion:JDA:4.1.1_104'
+    compile 'org.seleniumhq.selenium:selenium-java:3.141.59'
+    compile 'org.jsoup:jsoup:1.12.2'
+    compile 'com.vdurmont:emoji-java:5.1.1'
     implementation files('libs/Speedrun4J.jar')
 }
 
 task(debug, dependsOn: 'classes', type: JavaExec) {
-    main = 'bbbots.Display'
+    main = 'botmanager.BotManagerDisplay'
     classpath = sourceSets.main.runtimeClasspath
     args 'server'
     debug true

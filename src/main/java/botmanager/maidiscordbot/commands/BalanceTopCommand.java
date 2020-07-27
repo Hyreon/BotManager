@@ -1,7 +1,7 @@
 package botmanager.maidiscordbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
 import java.io.File;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -68,7 +68,7 @@ public class BalanceTopCommand extends MaiDiscordBotCommandBase {
         }
         
         guild = event.getGuild();
-        files = new File("data/" + bot.getName() + "/" + event.getGuild().getId() + "/").listFiles();
+        files = new File("data/" + bot.getName() + "/guilds/" + event.getGuild().getId() + "/members/").listFiles();
 
         int[] baltop = new int[size];
         String[] baltopNames = new String[size];
@@ -121,7 +121,7 @@ public class BalanceTopCommand extends MaiDiscordBotCommandBase {
             }
         }
         
-        Utilities.sendGuildMessage(event.getChannel(), result);
+        JDAUtils.sendGuildMessage(event.getChannel(), result);
     }
 
     @Override

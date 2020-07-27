@@ -1,12 +1,11 @@
 package botmanager.maidiscordbot.commands;
 
+import botmanager.JDAUtils;
 import botmanager.generic.BotBase;
-import botmanager.Utilities;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import botmanager.maidiscordbot.generic.MaiDiscordBotCommandBase;
-import botmanager.maidiscordbot.MaiDiscordBot;
 
 /**
  *
@@ -56,7 +55,7 @@ public class BalanceCommand extends MaiDiscordBotCommandBase {
         }
         
         if (message.length() > 0) {
-            id = Utilities.findUserId(event.getGuild(), message);
+            id = JDAUtils.findUserId(event.getGuild(), message);
         }
         
         if (id == null) {
@@ -72,7 +71,7 @@ public class BalanceCommand extends MaiDiscordBotCommandBase {
             }
         }
         
-        Utilities.sendGuildMessage(event.getChannel(), result);
+        JDAUtils.sendGuildMessage(event.getChannel(), result);
     }
 
     @Override
